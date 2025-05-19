@@ -1,0 +1,87 @@
+<Window x:Class="TestEkz.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TestEkz"
+        mc:Ignorable="d"
+        Title="MainWindow"
+        Height="450" Width="500"
+        ResizeMode="NoResize"
+        Icon="/Images/Мастер пол.ico">
+    <Grid>
+        <TextBox x:Name="LoginTextBox"
+                 HorizontalAlignment="Center"
+                 Margin="0,115,0,0"
+                 VerticalAlignment="Top"
+                 Width="345" Height="30"/>
+
+        <PasswordBox x:Name="PasswordBox"
+                     HorizontalAlignment="Center"
+                     Margin="0,187,0,0"
+                     VerticalAlignment="Top"
+                     Width="345" Height="30"/>
+
+        <Button Content="Авторизоваться"
+                HorizontalAlignment="Center"
+                Margin="0,263,0,0"
+                VerticalAlignment="Top"
+                Width="156" Height="35"
+                Click="LoginButton_Click"/>
+
+        <Button Content="Регистрация"
+                HorizontalAlignment="Center"
+                Margin="0,323,0,0"
+                VerticalAlignment="Top"
+                Width="156" Height="35"
+                Click="RegisterButton_Click"/>
+
+        <Label Content="Логин" 
+               HorizontalAlignment="Left"
+               Margin="78,84,0,0" 
+               VerticalAlignment="Top"/>
+        
+        <Label Content="Пароль" 
+               HorizontalAlignment="Left" 
+               Margin="78,156,0,0" 
+               VerticalAlignment="Top"/>
+    </Grid>
+</Window>
+
+
+
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void RegisterButton_Click(object sender, RoutedEventArgs e)
+        {
+            RegistrationWindow regWindow = new RegistrationWindow();
+            regWindow.Show();
+            this.Close();
+        }
+
+        private void LoginButton_Click(object sender, RoutedEventArgs e)
+        {
+            string username = LoginTextBox.Text.Trim();
+            string password = PasswordBox.Password.Trim();
+
+            using (var db = new TestEkzContext())
+            {
+                var user = db.Employees.FirstOrDefault(u => u.Username == username && u.Password == password);
+                if (user != null)
+                {
+                    MessageBox.Show("Успешный вход!", "Авторизация", MessageBoxButton.OK, MessageBoxImage.Information);
+                    PartnersWindow partnersWindow = new PartnersWindow();
+                    partnersWindow.Show();
+                    this.Close();
+
+                } else {
+                    MessageBox.Show("Неверный логин или пароль!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+    }

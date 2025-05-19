@@ -1,0 +1,50 @@
+﻿<Window x:Class="TestEkz.PartnerDialogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding WindowTitle}" Height="550" Width="450">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Label Content="Название компании:" Grid.Row="0"/>
+        <TextBox x:Name="CompanyNameTextBox" Grid.Row="1" Margin="0,0,0,10"/>
+
+        <Label Content="Тип партнера:" Grid.Row="2"/>
+        <ComboBox x:Name="PartnerTypeComboBox" Grid.Row="3" Margin="0,0,0,10" DisplayMemberPath="TypeName"/>
+
+        <Label Content="ИНН:" Grid.Row="4"/>
+        <TextBox x:Name="TaxIdTextBox" Grid.Row="5" Margin="0,0,0,10"/>
+
+        <Label Content="ФИО директора:" Grid.Row="6"/>
+        <TextBox x:Name="DirectorNameTextBox" Grid.Row="7" Margin="0,0,0,10"/>
+
+        <Label Content="Телефон:" Grid.Row="8"/>
+        <TextBox x:Name="PhoneTextBox" Grid.Row="9" Margin="0,0,0,10"/>
+
+        <Label Content="Email:" Grid.Row="10"/>
+        <TextBox x:Name="EmailTextBox" Grid.Row="11" Margin="0,0,0,10"/>
+
+        <Label Content="Юридический адрес:" Grid.Row="12"/>
+        <TextBox x:Name="LegalAddressTextBox" Grid.Row="13" Margin="0,0,0,10"/>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="14" HorizontalAlignment="Right">
+            <Button Content="OK" Width="80" Margin="5" Click="OkButton_Click"/>
+            <Button Content="Отмена" Width="80" Margin="5" Click="CancelButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

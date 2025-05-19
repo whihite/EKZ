@@ -1,0 +1,168 @@
+CREATE TABLE Roles (
+    RoleID INT PRIMARY KEY IDENTITY(1,1),
+    RoleName NVARCHAR(50) NOT NULL,
+    Description NVARCHAR(255)
+);
+GO
+
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY IDENTITY(1,1),
+    FullName NVARCHAR(100) NOT NULL,
+    BirthDate DATE,
+    PassportData NVARCHAR(100),
+    BankDetails NVARCHAR(100),
+    MaritalStatus NVARCHAR(50),
+    HealthStatus NVARCHAR(100),
+    Username NVARCHAR(50) UNIQUE NOT NULL,
+    Password NVARCHAR(255) NOT NULL,
+    RoleID INT NOT NULL,
+    AccountStatus BIT DEFAULT 1,
+    LastLogin DATETIME,
+	CONSTRAINT FK_Employees_Roles FOREIGN KEY (RoleID) REFERENCES Roles(RoleID)
+);
+GO
+
+CREATE TABLE Suppliers (
+    SupplierID INT PRIMARY KEY IDENTITY(1,1),
+    SupplierType NVARCHAR(50) NOT NULL,
+    CompanyName NVARCHAR(100) NOT NULL,
+    TaxID NVARCHAR(20) UNIQUE NOT NULL,
+    LegalAddress NVARCHAR(255),
+    ContactDetails NVARCHAR(100),
+    Rating DECIMAL(3,2) DEFAULT 5.00
+);
+GO
+
+CREATE TABLE PartnerTypes (
+    PartnerTypeID INT PRIMARY KEY IDENTITY(1,1),
+    TypeName NVARCHAR(50) NOT NULL
+);
+GO
+
+CREATE TABLE Partners (
+    PartnerID INT PRIMARY KEY IDENTITY(1,1),
+    PartnerTypeID INT NOT NULL,
+    CompanyName NVARCHAR(100) NOT NULL,
+    TaxID NVARCHAR(20) UNIQUE NOT NULL,
+    LegalAddress NVARCHAR(255) NOT NULL,
+    DirectorName NVARCHAR(100) NOT NULL,
+    Phone NVARCHAR(20) NOT NULL,
+    Email NVARCHAR(100) NOT NULL,
+    Rating DECIMAL(3,2) DEFAULT 5.00,
+    TotalSalesVolume DECIMAL(15,2) DEFAULT 0.00,
+    CurrentDiscount DECIMAL(5,2) DEFAULT 0.00,
+	CONSTRAINT FK_Partners_PartnerTypes FOREIGN KEY (PartnerTypeID) REFERENCES PartnerTypes (PartnerTypeID)
+);
+GO
+
+CREATE TABLE SalesPoints (
+	SalesPointID INT PRIMARY KEY IDENTITY(1,1),
+	PartnerID INT NOT NULL,
+	PointType NVARCHAR(50) NOT NULL,
+	Address NVARCHAR(255),
+	ContactPhone NVARCHAR(20),
+	CONSTRAINT FK_SalesPoint_Partners FOREIGN KEY (PartnerID) REFERENCES Partners (PartnerID)
+);
+GO
+
+CREATE TABLE Materials (
+    MaterialID INT PRIMARY KEY IDENTITY(1,1),
+    MaterialType NVARCHAR(50) NOT NULL,
+    Name NVARCHAR(100) NOT NULL,
+    SupplierID INT NOT NULL,
+    PackageQuantity INT NOT NULL,
+    UnitOfMeasure NVARCHAR(20) NOT NULL,
+    Cost DECIMAL(15,2) NOT NULL,
+    CurrentStock DECIMAL(12,3) NOT NULL,
+    MinStockLevel DECIMAL(12,3) NOT NULL,
+    CONSTRAINT FK_Materials_Suppliers FOREIGN KEY (SupplierID) REFERENCES Suppliers(SupplierID)
+);
+GO
+
+CREATE TABLE ProductTypes (
+    ProductTypeID INT PRIMARY KEY IDENTITY(1,1),
+    TypeName NVARCHAR(50) NOT NULL
+);
+GO
+
+CREATE TABLE Products (
+    ProductID INT PRIMARY KEY IDENTITY(1,1),
+    ProductTypeID INT NOT NULL,
+    SKU NVARCHAR(50) UNIQUE NOT NULL,
+    ProductName NVARCHAR(100) NOT NULL,
+    MinPartnerPrice DECIMAL(15,2) NOT NULL,
+    PackageLength DECIMAL(8,2) NOT NULL,
+    PackageWidth DECIMAL(8,2) NOT NULL,
+    PackageHeight DECIMAL(8,2) NOT NULL,
+    ProductionTime INT NOT NULL,
+    ProductionCost DECIMAL(15,2) NOT NULL,
+    WorkshopNumber INT NOT NULL,
+    RequiredWorkers INT NOT NULL,
+    CONSTRAINT FK_Products_ProductTypes FOREIGN KEY (ProductTypeID) REFERENCES ProductTypes(ProductTypeID)
+);
+GO
+
+CREATE TABLE ProductMaterials (
+    ProductID INT NOT NULL,
+    MaterialID INT NOT NULL,
+    Quantity DECIMAL(12,3) NOT NULL,
+    PRIMARY KEY (ProductID, MaterialID),
+    CONSTRAINT FK_ProductMaterials_Products FOREIGN KEY (ProductID) REFERENCES Products(ProductID),
+	CONSTRAINT FK_ProductMaterials_Materials FOREIGN KEY (MaterialID) REFERENCES Materials(MaterialID)
+);
+GO
+
+CREATE TABLE WarehouseTransactions (
+	TransactionID INT PRIMARY KEY IDENTITY(1,1),
+	TransactionType NVARCHAR(20) NOT NULL,
+	MaterialID INT NOT NULL,
+	ProductID INT NULL,
+    Quantity DECIMAL(12,3) NOT NULL,
+    TransactionDate DATETIME DEFAULT GETDATE(),
+    EmployeeID INT NOT NULL,
+	CONSTRAINT FK_WarehouseTransactions_Materials FOREIGN KEY (MaterialID) REFERENCES Materials(MaterialID),
+	CONSTRAINT FK_WarehouseTransactions_Products FOREIGN KEY (ProductID) REFERENCES Products(ProductID),
+	CONSTRAINT FK_WarehouseTransactions_Employees FOREIGN KEY (EmployeeID) REFERENCES Employees(EmployeeID),
+	CONSTRAINT CK_WarehouseTransactions_MaterialOrProduct CHECK (
+		(MaterialID IS NOT NULL AND ProductID IS NULL) OR
+		(MaterialID IS NULL AND ProductID IS NOT NULL)
+	)
+);
+
+CREATE TABLE Orders (
+    OrderID INT PRIMARY KEY IDENTITY(1,1),
+    PartnerID INT NOT NULL,
+    ManagerID INT NOT NULL,
+    OrderDate DATETIME DEFAULT GETDATE(),
+    PrepaymentAmount DECIMAL(15,2),
+    TotalAmount DECIMAL(15,2) NOT NULL,
+    DiscountAmount DECIMAL(15,2) DEFAULT 0.00,
+    Status NVARCHAR(20) NOT NULL,
+    DeliveryMethod NVARCHAR(50),
+    CONSTRAINT FK_Orders_Partners FOREIGN KEY (PartnerID) REFERENCES Partners(PartnerID),
+    CONSTRAINT FK_Orders_Employees FOREIGN KEY (ManagerID) REFERENCES Employees(EmployeeID)
+);
+GO
+
+CREATE TABLE OrderItems (
+    OrderItemID INT PRIMARY KEY IDENTITY(1,1),
+    OrderID INT NOT NULL,
+    ProductID INT NOT NULL,
+    Quantity INT NOT NULL,
+    UnitPrice DECIMAL(15,2) NOT NULL,
+    Status NVARCHAR(20) NOT NULL, -- например: "Заказан", "Отгружен", "Отменен"
+    CONSTRAINT FK_OrderItems_Orders FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
+    CONSTRAINT FK_OrderItems_Products FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
+);
+GO
+
+CREATE TABLE PartnerSalesHistory (
+    HistoryID INT PRIMARY KEY IDENTITY(1,1),
+    PartnerID INT NOT NULL,
+    ProductID INT NOT NULL,
+    Quantity INT NOT NULL,
+    SaleAmount DECIMAL(15,2) NOT NULL,
+    CONSTRAINT FK_PartnerSalesHistory_Partners FOREIGN KEY (PartnerID) REFERENCES Partners(PartnerID),
+    CONSTRAINT FK_PartnerSalesHistory_Products FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
+);
+GO

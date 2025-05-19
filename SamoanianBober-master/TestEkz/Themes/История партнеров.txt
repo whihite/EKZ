@@ -1,0 +1,89 @@
+<Window x:Class="TestEkz.PartnerSalesHistoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="История продаж партнера" Height="450" Width="800">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="PartnerInfoText" Grid.Row="0" Margin="0,0,0,10" 
+                   FontWeight="Bold" FontSize="14"/>
+
+        <DataGrid x:Name="SalesHistoryDataGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Дата заказа" Binding="{Binding OrderDate, StringFormat={}{0:dd.MM.yyyy}}"/>
+                <DataGridTextColumn Header="Продукт" Binding="{Binding ProductName}"/>
+                <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}"/>
+                <DataGridTextColumn Header="Цена за единицу" Binding="{Binding UnitPrice, StringFormat=N2}"/>
+                <DataGridTextColumn Header="Сумма" Binding="{Binding TotalAmount, StringFormat=N2}"/>
+                <DataGridTextColumn Header="Статус" Binding="{Binding Status}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>
+
+
+
+using System.Windows;
+using Microsoft.EntityFrameworkCore;
+using TestEkz.Entities;
+using System.Linq;
+
+namespace TestEkz
+{
+    public partial class PartnerSalesHistoryWindow : Window
+    {
+        private readonly Partner _partner;
+
+        public PartnerSalesHistoryWindow(Partner partner)
+        {
+            InitializeComponent();
+            _partner = partner;
+            LoadPartnerInfo();
+            LoadSalesHistory();
+        }
+
+        private void LoadPartnerInfo()
+        {
+            PartnerInfoText.Text = $"{_partner.CompanyName} (ИНН: {_partner.TaxId}) - " +
+                                 $"Общий объем продаж: {_partner.TotalSalesVolume:N2} руб., " +
+                                 $"Текущая скидка: {_partner.CurrentDiscount}%";
+        }
+
+        private void LoadSalesHistory()
+        {
+            using (var context = new TestEkzContext())
+            {
+                var history = context.OrderItems
+                    .Include(oi => oi.Order)
+                    .Include(oi => oi.Product)
+                    .Where(oi => oi.Order != null && oi.Order.PartnerId == _partner.PartnerId)
+                    .Select(oi => new PartnerSalesViewModel
+                    {
+                        OrderDate = oi.Order.OrderDate,  // Теперь типы совместимы
+                        ProductName = oi.Product.ProductName,
+                        Quantity = oi.Quantity,
+                        UnitPrice = oi.UnitPrice,
+                        TotalAmount = oi.Quantity * oi.UnitPrice,
+                        Status = oi.Status
+                    })
+                    .OrderByDescending(h => h.OrderDate)
+                    .ToList();
+
+                SalesHistoryDataGrid.ItemsSource = history;
+            }
+        }
+    }
+
+    public class PartnerSalesViewModel
+    {
+        public DateTime? OrderDate { get; set; }
+        public string ProductName { get; set; }
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal TotalAmount { get; set; }
+        public string Status { get; set; }
+    }
+}
